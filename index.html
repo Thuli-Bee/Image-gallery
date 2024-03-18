@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Gallery</title>
+</head>
+<body>
+  <h1>Image Gallery</h1>
+
+  <input type="file" id="imageInput">
+  <button onclick="uploadImage()">Upload</button>
+
+  <div id="imageContainer"></div>
+
+  <script>
+    function fetchImages() {
+      fetch('/images')
+        .then(response => response.json())
+        .then(images => {
+          const imageContainer = document.getElementById('imageContainer');
+          imageContainer.innerHTML = '';
+          images.forEach(image => {
+            const img = document.createElement('img');
+            img.src = `uploads/${image}`;
+            img.alt = image;
+            img.style.width = '200px';
+            imageContainer.appendChild(img);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = () => deleteImage(image);
+            imageContainer.appendChild(deleteBtn);
+          });
+        })
+        .catch(error => console.error(error));
+    }
+
+    function uploadImage() {
+      const fileInput = document.getElementById('imageInput');
+      const formData = new FormData();
+      formData.append('image', fileInput.files[0]);
+
+      fetch('/upload', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => {
+        if (response.ok) {
+          fetchImages();
+        } else {
+          throw new Error('Failed to upload image');
+        }
+      })
+      .catch(error => console.error(error));
+    }
+
+    function deleteImage(imageName) {
+      fetch(`/delete/${imageName}`, {
+        method: 'DELETE'
+      })
+      .then(response => {
+        if (response.ok) {
+          fetchImages();
+        } else {
+          throw new Error('Failed to delete image');
+        }
+      })
+      .catch(error => console.error(error));
+    }
+
+    fetchImages();
+  </script>
+</body>
+</html>
